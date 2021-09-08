@@ -1,6 +1,10 @@
 import puppeteer from 'puppeteer'
 import yargs from 'yargs'
 
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 interface Size {
   width: number
   height?: number
@@ -66,6 +70,7 @@ async function shootPage(browser: puppeteer.Browser, page: Page) {
 
     await browserPage.setViewport(size as puppeteer.Viewport)
     await browserPage.goto(page.url)
+    await delay(1000)
 
     const sizeName = `${size.width}${size.height ? `-${size.height}` : ''}`
     const name = `${page.url}-${sizeName}`.replace(/[^a-zA-Z\-\d]/g, '')
