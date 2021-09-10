@@ -7,7 +7,8 @@ function delay(ms: number) {
 
 interface Size {
   width: number
-  height?: number
+  height: number
+  deviceScaleFactor: number
 }
 
 interface Page {
@@ -39,10 +40,13 @@ const argv = yargs
         .split(',')
         .map((size: string) => size.split(':').map((s: any) => parseInt(s)))
 
-        .map(([width, height]: [number, number]) => ({
-          width,
-          height: height ?? 960,
-        }))
+        .map(
+          ([width, height, deviceScaleFactor]: [number, number, number]) => ({
+            width,
+            height: height ?? 960,
+            deviceScaleFactor: deviceScaleFactor ?? 1,
+          })
+        )
       const pages = urls.map((url: string) => ({
         url,
         sizes,
@@ -65,10 +69,16 @@ async function shootPage(browser: puppeteer.Browser, page: Page) {
   let browserPage = await browser.newPage()
   for (const size of page.sizes) {
     console.log(
-      `Shooting ${page.url} at width: ${size.width} and height: ${size.height}`
+      `Shooting ${page.url} at width: ${size.width}, height: ${size.height} and scale: ${size.deviceScaleFactor}`
     )
 
-    await browserPage.setViewport(size as puppeteer.Viewport)
+    let fixedSize = { ...size }
+    if (size.deviceScaleFactor !== 1) {
+      fixedSize.height = size.height / size.deviceScaleFactor
+      fixedSize.width = size.width / size.deviceScaleFactor
+    }
+
+    await browserPage.setViewport(fixedSize as puppeteer.Viewport)
     await browserPage.goto(page.url)
     await delay(1000)
 
